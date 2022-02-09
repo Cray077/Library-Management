@@ -25,10 +25,36 @@ def drop_table():
         cur.execute("DROP TABLE books")
 
 
+def update_book(book, title, id_num):
+    with conn:
+        cur.execute("""UPDATE books SET title=:title, author=:author,year=:year
+                ,isbn=:isbn, id_num= :id_num,datetime= :datetime,descript=:descript 
+                WHERE title= :origin AND id_num=:origin2""", 
+                {   
+                    "title": book[0],
+                    "author": book[1],
+                    "year": book[2],
+                    "isbn": book[3],
+                    "id_num": book[4],
+                    "datetime": book[5],
+                    "descript": book[6],
+                    "origin" : title,
+                    "origin2": id_num
+                    }
+                )
+
 def add_book(book):
     with conn:
-        cur.execute("INSERT INTO books VALUES (:title, :author, :year, :isbn, :id_num, :datetime, :descript)", 
-                {"title": book[0], "author": book[1], "year": book[2], "isbn": book[3], "id_num": book[4], "datetime": book[5], "descript": book[6]})
+        cur.execute("""INSERT INTO books VALUES
+                (:title, :author, :year, :isbn, :id_num, :datetime, :descript)""", 
+                {
+                    "title": book[0], 
+                    "author": book[1], 
+                    "year": book[2], 
+                    "isbn": book[3], 
+                    "id_num": book[4], 
+                    "datetime": book[5], 
+                    "descript": book[6]})
 
 def read_database():
     cur.execute("SELECT * FROM books")
@@ -39,6 +65,7 @@ def delete_book(book):
     with conn:
         cur.execute("DELETE FROM books WHERE title= :title AND id_num= :id_num",
                 {"title": book[0], "id_num": book[4]})
+    print("Deleted", book)
 
 # Create Table in SQL
 try:
@@ -53,7 +80,7 @@ root = Tk()
 root.title("Library Book's Management")
 
 # Frame
-entry = LabelFrame(root, padx=10, pady=10)
+entry = LabelFrame(root)
 treeview = LabelFrame(root)
 
 # Treeview
@@ -62,13 +89,13 @@ tree = ttk.Treeview(treeview)
 # Define Columns
 tree["columns"] = ("Title", "Author", "Year", "Isbn", "ID", "Time", "Description")
 
-tree.column("#0", width=35, stretch=False, anchor=W)
+tree.column("#0", width=36, stretch=False, anchor=W)
 tree.column("Title", width=90, stretch=False, anchor=W)
-tree.column("Author", width=20, stretch=False, anchor=W)
+tree.column("Author", width=90, stretch=False, anchor=W)
 tree.column("Year", width=50, stretch=False, anchor=W)
 tree.column("Isbn", width=70, stretch=False, anchor=W)
-tree.column("ID", width=70, stretch=False)
-tree.column("Time", width=20, stretch=False, anchor=W)
+tree.column("ID", width=75, stretch=False)
+tree.column("Time", width=80, stretch=False, anchor=W)
 tree.column("Description", width=120, stretch=False, anchor=W)
 
 # Define Headings
@@ -112,6 +139,13 @@ id_num = Entry(entry, width=30)
 descript = Entry(entry, width=30)
 
 search_bar = Entry(treeview, width= 50)
+
+
+# Menu Bar (Search Bar)
+ls = ("title", "author", "year", "isbn", "id_num", "datetime", "descript")
+selected = StringVar()
+selected.set(ls[0])
+menu_bar = OptionMenu(treeview, selected, *ls)
 
 #Label
 
@@ -161,7 +195,6 @@ def edit():
     select = tree.focus()
     data = tree.item(select, "values")
 
-    print(data)
     title.insert(0, data[0])
     author.insert(0, data[1])
     year.insert(0, data[2])
@@ -171,31 +204,33 @@ def edit():
 
 def update():
     select = tree.focus()
-    tree.item(select, values=(
-   
-    title.get(),
-    author.get(),
-    year.get(),
-    isbn.get(),
-    id_num.get(),
-    date.today(),
-    descript.get()
+
+    data = tree.item(select, "values")
+    ori_title = data[0]
+    ori_id = data[4]
+
+    data1 = title.get()
+    data2 = author.get()
+    data3 = year.get()
+    data4 = isbn.get()
+    data5 = id_num.get()
+    data6 = date.today()
+    data7 = descript.get()
+
+    data = (data1,data2,data3,data4,data5, data6, data7)
+    update_book(data, ori_title, ori_id)
+    
+    tree.item(select,values = (
+    
+        title.get(),
+        author.get(),
+        year.get(),
+        isbn.get(),
+        id_num.get(),
+        date.today(),
+        descript.get()
     ))
-    with conn:
-
-        cur.execute("UPDATE books SET title=:title, author=:author,year=:year,isbn=:isbn, id_num= :id_num,datetime= :datetime,descript=:descript WHERE title= :title AND id_num=id_num", 
-                {   "title": title.get(),
-                    "author": author.get(),
-                    "year": year.get(),
-                    "isbn": isbn.get(),
-                    "id_num": id_num.get(),
-                    "datetime": date.today(),
-                    "descript": descript.get()
-                    })
-
-
     clear_entry()
-
 
 def delete():
     select = tree.selection()
@@ -205,7 +240,7 @@ def delete():
         tree.delete(x)
 
 def search():
-    key = "author"
+    key = selected.get()
     value = search_bar.get()
     data = read_database()
     ls = ("title", "author", "year", "isbn", "id_num", "datetime", "descript")
@@ -220,6 +255,93 @@ def search():
         num += 1
 
 
+########### Borrow Window ##########
+
+def read_borrow():
+    pass
+
+def add_borrow():
+    pass
+
+def remove_borrow():
+    pass
+
+def edit_borrow():
+    pass
+
+def update_borrow():
+    pass
+
+def search_borrow():
+    pass
+
+def borrow_window():
+    borrow = Tk()
+    borrow.title("Book Borrower's list")
+
+    bor_entry = LabelFrame(borrow)
+    bor_tree = LabelFrame(borrow)
+
+    # Treeview
+    tree2 = ttk.Treeview(bor_tree)
+
+    # Define Columns
+    tree2["columns"] = ("Name", "Class", "Date")
+
+    tree2.column("#0", width=36, stretch=False, anchor=W)
+    tree2.column("Name", width=90, stretch=False, anchor=W)
+    tree2.column("Class", width=90, stretch=False, anchor=W)
+    tree2.column("Date", width=50, stretch=False, anchor=W)
+
+    # Define Headings
+    tree2.heading("#0", text = "Num", anchor=W)
+    tree2.heading("Name", text ="Name", anchor=W)
+    tree2.heading("Class", text = "Class", anchor=W)
+    tree2.heading("Date", text = "Date", anchor=W)
+
+
+    bor_entry.grid(row = 0, column = 1)
+    bor_tree.grid(row = 0, column = 0)
+
+    tree2.grid(row = 0, column = 0)
+
+
+    # Entry
+    bor_title = Entry(bor_entry, width=30)
+    bor_author = Entry(bor_entry, width=30)
+    bor_year = Entry(bor_entry, width=30)
+    bor_isbn = Entry(bor_entry, width=30)
+    bor_id_num = Entry(bor_entry, width=30)
+    bor_descript = Entry(bor_entry, width=30)
+
+    #Label
+    bor_title_lb = Label(bor_entry, text="Title", anchor="w")
+    bor_author_lb = Label(bor_entry, text="Author", anchor="w")
+    bor_year_lb = Label(bor_entry, text="Year", anchor="w")
+    bor_isbn_lb = Label(bor_entry, text="ISBN", anchor="w")
+    bor_id_lb = Label(bor_entry, text="ID", anchor="w")
+    bor_desc_lb = Label(bor_entry, text="Description", anchor="w")
+
+
+    bor_title.grid(row = 1, column = 0, columnspan = 3)
+    bor_author.grid(row = 3, column = 0, columnspan = 3)
+    bor_year.grid(row = 5, column = 0, columnspan = 3)
+    bor_isbn.grid(row = 7, column = 0, columnspan = 3)
+    bor_id_num.grid(row = 9, column = 0, columnspan = 3)
+    bor_descript.grid(row = 11, column = 0, columnspan = 3)
+
+    bor_title_lb.grid(row = 0, column = 0) 
+    bor_author_lb.grid(row = 2, column = 0) 
+    bor_year_lb.grid(row = 4, column = 0) 
+    bor_isbn_lb.grid(row = 6, column = 0) 
+    bor_id_lb.grid(row = 8, column = 0) 
+    bor_desc_lb.grid(row = 10, column = 0)  
+
+
+
+    borrow.mainloop()
+
+
 
 # Buttons
 btn_save = Button(entry, text="Save", command = save, width=10)
@@ -228,18 +350,20 @@ btn_edit = Button(entry, text="Edit", command = edit, width=10)
 btn_delete = Button(entry, text="Delete", command = delete, width=10)
 btn_update = Button(entry, text="Update", command = update, width=10)
 btn_search = Button(treeview, text="Search", command=search, width=10)
-
+btn_borrow = Button(entry, text="Borrow", command=borrow_window, width=10)
 
 # Grid
 entry.grid(row=0, column=1)
 treeview.grid(row=0, column=0)
 
-btn_search.grid(row=0, column=1)
-search_bar.grid(row=0, column=0)
-tree.grid(row=1, column= 0, columnspan=2)
+menu_bar.grid(row=0, column=0)
+btn_search.grid(row=0, column=2)
+search_bar.grid(row=0, column=1)
 
-scrollbar.grid(row=1, column=2, sticky="ns")
-scrollbar_hor.grid(row=2, column=0, sticky="ew", columnspan=2)
+tree.grid(row=1, column= 0, columnspan=3)
+
+scrollbar.grid(row=1, column=3, sticky="ns")
+scrollbar_hor.grid(row=2, column=0, sticky="ew", columnspan=3)
 
 title.grid(row = 1, column = 0, columnspan = 3)
 author.grid(row = 3, column = 0, columnspan = 3)
@@ -253,6 +377,7 @@ btn_read.grid(row = 13, column = 0)
 btn_edit.grid(row = 12, column = 1)
 btn_delete.grid(row = 13, column = 1)
 btn_update.grid(row = 12, column = 2)
+btn_borrow.grid(row = 13, column = 2)
 
 title_lb.grid(row = 0, column = 0) 
 author_lb.grid(row = 2, column = 0) 
@@ -262,6 +387,6 @@ id_lb.grid(row = 8, column = 0)
 desc_lb.grid(row = 10, column = 0)  
 
 
-
+conn.commit()
 root.mainloop()
 conn.close()
